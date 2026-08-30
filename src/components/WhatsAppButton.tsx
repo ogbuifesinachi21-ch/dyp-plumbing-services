@@ -1,9 +1,9 @@
-//import React from 'react'
-import { FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp } from "react-icons/fa6";
 
+//import React from 'react'
 const WhatsappButton = () => {
-  const phoneNumber = "2348123456789"; // <-- PUT YOUR WHATSAPP NUMBER HERE
-  const message = "Hello DYP Plumbing, I need plumbing services";
+  const phoneNumber = "2348031234567"; // <-- CLIENT'S NUMBER
+  const message = "Hello DYP Plumbing Services, I need plumbing services from your website";
   
   return (
     <a 

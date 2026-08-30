@@ -3,13 +3,12 @@ import { useState, useRef, useEffect } from "react";
 import { GraduationCap, Wrench, Shield, User, CheckCircle, Send, X } from "lucide-react";
 import emailjs from '@emailjs/browser';
 
-// 1. ADD PROPS INTERFACE
 interface ApprenticeshipFormProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ApprenticeshipForm = ({ isOpen, onClose }: ApprenticeshipFormProps) => { // 2. USE PROPS
+const ApprenticeshipForm = ({ isOpen, onClose }: ApprenticeshipFormProps) => {
   const formRef = useRef<HTMLFormElement>(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,7 +19,8 @@ const ApprenticeshipForm = ({ isOpen, onClose }: ApprenticeshipFormProps) => { /
   ]);
 
   useEffect(() => {
-    emailjs.init("cyTRTppSYC36vpaEP");
+    // CHANGED: Use env variable instead of hardcoded key
+    emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
   }, []);
 
   const handleEduChange = (index: number, field: string, value: string) => {
@@ -33,18 +33,19 @@ const ApprenticeshipForm = ({ isOpen, onClose }: ApprenticeshipFormProps) => { /
     e.preventDefault();
     setLoading(true);
 
+    // CHANGED: Use env variables instead of hardcoded
     emailjs.sendForm(
-      'service_9au0g0i',
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
       'template_77m7jnq',
       formRef.current!,
-      'cyTRTppSYC36vpaEP'
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     )
-  .then(() => {
+ .then(() => {
       setSubmitted(true);
       setLoading(false);
       setTimeout(() => {
         setSubmitted(false);
-        onClose(); // 3. CLOSE MODAL AFTER SUCCESS
+        onClose();
       }, 3000);
       formRef.current?.reset();
       setEducation([
@@ -53,25 +54,22 @@ const ApprenticeshipForm = ({ isOpen, onClose }: ApprenticeshipFormProps) => { /
         { level: "", school: "", location: "", year: "" },
       ]);
     })
-  .catch((error) => {
+ .catch((error) => {
       alert("Failed to send. Please try again.");
       console.log(error);
       setLoading(false);
     });
   };
 
-  if (!isOpen) return null; // 4. DON'T RENDER IF CLOSED
+  if (!isOpen) return null;
 
   const inputClass = "input input-bordered w-full bg-white text-black border-gray-300 focus:border-[#FF6B00] placeholder:text-gray-500";
   const labelClass = "label text-black font-semibold";
   const tableInputClass = "input input-sm w-full bg-white text-black border-gray-300";
 
   return (
-    // 5. WRAPPED IN MODAL OVERLAY
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 fade-in">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl relative max-h-[90vh] overflow-y-auto">
-
-        {/* CLOSE BUTTON */}
         <button onClick={onClose} className="absolute top-4 right-4 btn btn-sm btn-circle btn-ghost z-10">
           <X className="text-black"/>
         </button>

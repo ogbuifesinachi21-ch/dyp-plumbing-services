@@ -13,9 +13,9 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Init EmailJS once
+  // Init EmailJS once - UPDATED
   useEffect(() => {
-    emailjs.init("cyTRTppSYC36vpaEP");
+    emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
   }, []);
 
   const buildingTypes = ["Four Story Building","Two Story Building","Duplex","Bungalow","One Toilet / Small Job"];
@@ -25,13 +25,14 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
     e.preventDefault();
     setLoading(true);
 
+    // UPDATED: Use env variables
     emailjs.sendForm(
-      'service_9au0g0i', // YOUR SERVICE ID
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
       'template_zpfq1lo', // YOUR QUOTE TEMPLATE ID
       formRef.current!,
-      'cyTRTppSYC36vpaEP' // YOUR PUBLIC KEY
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     )
-   .then(() => {
+  .then(() => {
       setSubmitted(true);
       setLoading(false);
       setTimeout(() => {
@@ -40,7 +41,7 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
       }, 3000);
       formRef.current?.reset();
     })
-   .catch((error) => {
+  .catch((error) => {
       alert("Failed to send. Please try again.");
       console.log(error);
       setLoading(false);
