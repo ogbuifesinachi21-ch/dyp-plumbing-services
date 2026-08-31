@@ -1,7 +1,6 @@
 //import React from 'react'
-import { useState, useRef, useEffect } from "react";
-import { GraduationCap, Wrench, Shield, User, CheckCircle, Send, X } from "lucide-react";
-import emailjs from '@emailjs/browser';
+import { useState, useRef } from "react";
+import { GraduationCap, Wrench, Shield, User, CheckCircle, Send, X, Loader2 } from "lucide-react";
 
 interface ApprenticeshipFormProps {
   isOpen: boolean;
@@ -12,16 +11,12 @@ const ApprenticeshipForm = ({ isOpen, onClose }: ApprenticeshipFormProps) => {
   const formRef = useRef<HTMLFormElement>(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
   const [education, setEducation] = useState([
     { level: "", school: "", location: "", year: "" },
     { level: "", school: "", location: "", year: "" },
     { level: "", school: "", location: "", year: "" },
   ]);
-
-  useEffect(() => {
-    // CHANGED: Use env variable instead of hardcoded key
-    emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-  }, []);
 
   const handleEduChange = (index: number, field: string, value: string) => {
     const updated = [...education];
@@ -29,36 +24,46 @@ const ApprenticeshipForm = ({ isOpen, onClose }: ApprenticeshipFormProps) => {
     setEducation(updated);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setStatusMsg("");
 
-    // CHANGED: Use env variables instead of hardcoded
-    emailjs.sendForm(
-      import.meta.env.VITE_EMAILJS_SERVICE_ID,
-      'template_77m7jnq',
-      formRef.current!,
-      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-    )
- .then(() => {
+    const formData = new FormData(formRef.current!);
+
+    // Add education table data as JSON so it shows nicely in email
+    formData.append("education", JSON.stringify(education));
+
+    // Web3Forms required fields
+    formData.append("access_key", "d97c92c1-afb7-4bbe-b9ed-6ba8a3bf2fb0");
+    formData.append("subject", "New Apprenticeship Application - DYP Plumbing");
+    formData.append("from_name", "DYP Plumbing Website");
+
+    const response = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
       setSubmitted(true);
-      setLoading(false);
-      setTimeout(() => {
-        setSubmitted(false);
-        onClose();
-      }, 3000);
+      setStatusMsg("✅ Application Submitted Successfully!");
       formRef.current?.reset();
       setEducation([
         { level: "", school: "", location: "", year: "" },
         { level: "", school: "", location: "", year: "" },
         { level: "", school: "", location: "", year: "" },
       ]);
-    })
- .catch((error) => {
-      alert("Failed to send. Please try again.");
-      console.log(error);
-      setLoading(false);
-    });
+      setTimeout(() => {
+        setSubmitted(false);
+        setStatusMsg("");
+        onClose();
+      }, 3000);
+    } else {
+      setStatusMsg(`❌ ${data.message}`);
+    }
+    setLoading(false);
   };
 
   if (!isOpen) return null;
@@ -70,7 +75,7 @@ const ApprenticeshipForm = ({ isOpen, onClose }: ApprenticeshipFormProps) => {
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 fade-in">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl relative max-h-[90vh] overflow-y-auto">
-        <button onClick={onClose} className="absolute top-4 right-4 btn btn-sm btn-circle btn-ghost z-10">
+        <button onClick={onClose} className="absolute top-4 right-4 btn-sm btn-circle btn-ghost z-10">
           <X className="text-black"/>
         </button>
 
@@ -81,9 +86,13 @@ const ApprenticeshipForm = ({ isOpen, onClose }: ApprenticeshipFormProps) => {
             <p className="text-black/70 italic mt-2">Learn Today. Build Tomorrow. Succeed With Us.</p>
           </div>
 
-          <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
-            {submitted && <div className="bg-green-100 text-green-700 p-4 rounded-xl text-center font-semibold flex items-center justify-center gap-2"><CheckCircle/> Application Submitted!</div>}
+          {statusMsg && (
+            <div className={`p-4 rounded-xl text-center font-semibold flex items-center justify-center gap-2 mb-6 ${submitted? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+              <CheckCircle/> {statusMsg}
+            </div>
+          )}
 
+          <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
             {/* 1. PERSONAL INFORMATION */}
             <div>
               <h3 className="flex items-center gap-2 text-xl font-bold text-white bg-black p-3 rounded-lg mb-4">
@@ -150,7 +159,7 @@ const ApprenticeshipForm = ({ isOpen, onClose }: ApprenticeshipFormProps) => {
             </div>
 
             <button type="submit" disabled={loading} className="btn w-full bg-[#FF6B00] border-[#FF6B00] text-white text-lg disabled:opacity-50">
-              <Send /> {loading? "Submitting..." : "Submit Application"}
+              {loading? <Loader2 className="animate-spin" /> : <Send />} {loading? "Submitting..." : "Submit Application"}
             </button>
           </form>
         </div>

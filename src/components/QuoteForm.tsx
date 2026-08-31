@@ -1,7 +1,6 @@
 //import React from 'react'
-import { useState, useRef, useEffect } from "react";
-import { Send, CheckCircle, X } from "lucide-react";
-import emailjs from '@emailjs/browser';
+import { useState, useRef } from "react";
+import { Send, CheckCircle, X, Loader2 } from "lucide-react";
 
 interface QuoteFormProps {
   isOpen: boolean;
@@ -12,39 +11,41 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
   const formRef = useRef<HTMLFormElement>(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Init EmailJS once
-  useEffect(() => {
-    emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-  }, []);
+  const [statusMsg, setStatusMsg] = useState("");
 
   const buildingTypes = ["Four Story Building","Two Story Building","Duplex","Bungalow","One Toilet / Small Job"];
   const services = ["Water Leakage","Pipe Installation","Drainage / Sewage","Bathroom & Kitchen Plumbing","Water Tank & Pump","Full Plumbing Contract","Emergency Repair","Other"]
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setStatusMsg("");
 
-    emailjs.sendForm(
-      import.meta.env.VITE_EMAILJS_SERVICE_ID,
-      'template_zpfq1lo',
-      formRef.current!,
-      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-    )
- .then(() => {
+    const formData = new FormData(formRef.current!);
+    formData.append("access_key", "d97c92c1-afb7-4bbe-b9ed-6ba8a3bf2fb0");
+    formData.append("subject", "New Quote Request - DYP Plumbing");
+    formData.append("from_name", "DYP Plumbing Website");
+
+    const response = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
       setSubmitted(true);
-      setLoading(false);
+      setStatusMsg("✅ Quote Request Sent Successfully!");
+      formRef.current?.reset();
       setTimeout(() => {
         setSubmitted(false);
+        setStatusMsg("");
         onClose();
       }, 3000);
-      formRef.current?.reset();
-    })
- .catch((error) => {
-      alert("Failed to send. Please try again.");
-      console.log("EmailJS Error:", error); // This will show exact error in console
-      setLoading(false);
-    });
+    } else {
+      setStatusMsg(`❌ ${data.message}`);
+    }
+    setLoading(false);
   };
 
   if (!isOpen) return null;
@@ -62,7 +63,11 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
           <p className="text-[#FF6B00] font-bold">REQUEST A QUOTE</p>
           <h1 className="text-3xl font-extrabold text-black">Get Your Free Contract Estimate</h1>
 
-          {submitted && <div className="bg-green-100 text-green-700 p-3 rounded-xl my-4 flex gap-2 items-center"><CheckCircle /> Quote Request Sent Successfully!</div>}
+          {statusMsg && (
+            <div className={`p-3 rounded-xl my-4 flex gap-2 items-center ${submitted ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+              <CheckCircle /> {statusMsg}
+            </div>
+          )}
 
           <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
@@ -83,7 +88,7 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
 
             <div>
               <label className="label text-black font-semibold">Type of Building / Project *</label>
-              <select name="buildingType" required className={selectClass}> {/* FIXED: was "service" */}
+              <select name="buildingType" required className={selectClass}>
                 <option value="">Select Building Type</option>
                 {buildingTypes.map(type => <option key={type} value={type}>{type}</option>)}
               </select>
@@ -91,7 +96,7 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
 
             <div>
               <label className="label text-black font-semibold">Type of Work Needed *</label>
-              <select name="service" required className={selectClass}> {/* Keep "service" for work */}
+              <select name="service" required className={selectClass}>
                 <option value="">Select Work</option>
                 {services.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -108,7 +113,7 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
             </div>
 
             <button type="submit" disabled={loading} className="btn w-full bg-[#FF6B00] border-[#FF6B00] text-white text-lg disabled:opacity-50">
-              <Send /> {loading? "Sending..." : "Send Quote Request"}
+              {loading ? <Loader2 className="animate-spin" /> : <Send />} {loading? "Sending..." : "Send Quote Request"}
             </button>
           </form>
         </div>
