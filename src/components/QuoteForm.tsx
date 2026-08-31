@@ -13,7 +13,7 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Init EmailJS once - UPDATED
+  // Init EmailJS once
   useEffect(() => {
     emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
   }, []);
@@ -25,14 +25,13 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
     e.preventDefault();
     setLoading(true);
 
-    // UPDATED: Use env variables
     emailjs.sendForm(
       import.meta.env.VITE_EMAILJS_SERVICE_ID,
-      'template_zpfq1lo', // YOUR QUOTE TEMPLATE ID
+      'template_zpfq1lo',
       formRef.current!,
       import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     )
-  .then(() => {
+ .then(() => {
       setSubmitted(true);
       setLoading(false);
       setTimeout(() => {
@@ -41,9 +40,9 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
       }, 3000);
       formRef.current?.reset();
     })
-  .catch((error) => {
+ .catch((error) => {
       alert("Failed to send. Please try again.");
-      console.log(error);
+      console.log("EmailJS Error:", error); // This will show exact error in console
       setLoading(false);
     });
   };
@@ -55,7 +54,7 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
   const textareaClass = "textarea textarea-bordered w-full bg-white text-black border-gray-300 focus:border-[#FF6B00] placeholder:text-gray-500";
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-999 flex items-center justify-center p-4 fade-in">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 fade-in">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl relative fade-in fade-in-delay-1 max-h-[90vh] overflow-y-auto">
         <button onClick={onClose} className="absolute top-4 right-4 btn btn-sm btn-circle btn-ghost"><X className="text-black"/></button>
 
@@ -84,7 +83,7 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
 
             <div>
               <label className="label text-black font-semibold">Type of Building / Project *</label>
-              <select name="service" required className={selectClass}>
+              <select name="buildingType" required className={selectClass}> {/* FIXED: was "service" */}
                 <option value="">Select Building Type</option>
                 {buildingTypes.map(type => <option key={type} value={type}>{type}</option>)}
               </select>
@@ -92,14 +91,14 @@ const QuoteForm = ({ isOpen, onClose }: QuoteFormProps) => {
 
             <div>
               <label className="label text-black font-semibold">Type of Work Needed *</label>
-              <select name="service" required className={selectClass}>
+              <select name="service" required className={selectClass}> {/* Keep "service" for work */}
                 <option value="">Select Work</option>
                 {services.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
 
             <div>
-              <label className="label text-black font-semibold">Project Address in Port Harcourt</label>
+              <label className="label text-black font-semibold">Project Address</label>
               <input name="address" placeholder="Enter Project Address" className={inputClass} />
             </div>
 
