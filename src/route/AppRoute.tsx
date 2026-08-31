@@ -12,6 +12,7 @@ import WhatsappButton from "../components/WhatsAppButton";
 import { useState } from "react";
 import QuoteForm from "../components/QuoteForm";
 import ApprenticeshipForm from "../components/ApprenticeshipForm";
+import NotFound from "../pages/NotFound";
 
 const AppRoute = () => {
     const [quoteOpen, setQuoteOpen] = useState(false);
@@ -33,6 +34,7 @@ const AppRoute = () => {
         <Route path="/services" element={<ServicePage onQuoteClick={openQuote} />} /> {/* 2. PASS TO SERVICES */}
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/request-a-quote" element={<Request />} /> {/* keep this as fallback page */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
 
       <Footer />
